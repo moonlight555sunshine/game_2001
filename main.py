@@ -1,8 +1,9 @@
 import random
+import re
 # Wait for the user to start the game
 input('Press ENTER to start')
 
-def user_roll(user_points, check_round):
+def user_roll(user_points, check_round, dice_1, dice_2):
     """
     Roll the dice and return the total points.
     Args:
@@ -13,9 +14,11 @@ def user_roll(user_points, check_round):
         int: The total points of the user.
     """
     roll = 0
-    # Roll two six-sided dice
-    for _ in range(2):
-        roll += random.randint(1, 6)
+    # Roll two dice from user input
+    side_1 = int(dice_1[1:])
+    side_2 = int(dice_2[1:])
+    roll += random.randint(1, side_1)
+    roll += random.randint(1, side_2)
     print(f'You rolled {roll}')
     # Apply special rules after the first round
     if check_round:
@@ -39,9 +42,10 @@ def computer_roll(computer_points, check_round):
         int: The total points of the computer.
     """
     roll = 0
-    # Roll two six-sided dice
-    for _ in range(2):
-        roll += random.randint(1, 6)
+    # Roll two random dice
+    sides = random.choices([3,4,6,8,10,12,20,100], k=2)
+    roll += random.randint(1, sides[0])
+    roll += random.randint(1, sides[1])
     print(f'Computer rolled {roll}')
     # Apply special rules after the first round
     if check_round:
@@ -55,6 +59,21 @@ def computer_roll(computer_points, check_round):
         computer_points += roll # In the first round, just add the roll
     return computer_points
 
+def check_dice_code(serial_number):
+    """
+    Checks if the dice code is valid.
+    Args:
+        dice_code (str): The dice code to check.
+    """
+    while True:
+        dice_pattern = r'D(?P<dice_sides>3|4|6|8|10|12|20|100)'
+        dice = input(f'Enter your {serial_number} dice code: ')
+        match = re.fullmatch(dice_pattern, dice)
+        if not match:
+            print('Invalid code')
+            continue
+        return dice
+
 def main(check_round=False):
     """
     Main game loop. Rolls dice for user and computer, applies rules, and checks win condition.
@@ -66,9 +85,13 @@ def main(check_round=False):
     """
     user_result = 0
     computer_result = 0
+
     while True:
+        # Get user dice codes
+        dice_1 = check_dice_code('first')
+        dice_2 = check_dice_code('second')
         # Perform user and computer rolls
-        user_points = user_roll(user_result, check_round)
+        user_points = user_roll(user_result, check_round, dice_1, dice_2)
         user_result = int(user_points)
         computer_points = computer_roll(computer_result, check_round)
         computer_result = int(computer_points)
@@ -84,7 +107,16 @@ def main(check_round=False):
             return 'Computer wins!'
         # Enable special rules for future rounds
         check_round = True
-        input('\nPress ENTER to continue\n')
+        # Ask user if they want to continue
+        while True:
+            check_end = input('\nDo you want continue? (Y/N) ')
+            if check_end.lower() == 'y': #continue game
+                break
+            elif check_end.lower() == 'n': #end game
+                print('Game over!')
+                return None
+            else:
+                print('Invalid input. Please enter Y or N.')
 # Start the game if the script is run directly
 if __name__ == '__main__':
     main()
